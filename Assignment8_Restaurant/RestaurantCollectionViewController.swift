@@ -24,7 +24,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
     }
     
     var activeLayout: Layout = .grid
-
+    
     /// store filtered restaurant items
     lazy var filteredRestaurants: [Item] = []
     
@@ -43,17 +43,18 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         } else {
             filteredRestaurants = Item.myrestaurants
         }
+        createSnapshot(from: filteredRestaurants)
         /// update snapshot here
-        var updated = dataSource.snapshot()
-        updated.deleteSections([.restaurants])
-        updated.appendSections([.restaurants])
-        updated.appendItems(filteredRestaurants, toSection: .restaurants)
-        dataSource.apply(updated, animatingDifferences: true, completion: nil)
+        //        var updated = dataSource.snapshot()
+        //        updated.deleteSections([.restaurants])
+        //        updated.appendSections([.restaurants])
+        //        updated.appendItems(filteredRestaurants, toSection: .restaurants)
+        //        dataSource.apply(updated, animatingDifferences: true, completion: nil)
     }
     
-
-
-
+    
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         /// set up search controller
@@ -69,7 +70,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         collectionView.backgroundColor = .systemGray5
         /// set collectionView layout
         collectionView.setCollectionViewLayout(generateGridLayout(), animated: false, completion: nil)
-
+        
         ///  Register cell classes
         collectionView.register(CategoryCollectionViewCell.self, forCellWithReuseIdentifier: CategoryCollectionViewCell.reuseIdentifier)
         collectionView.register(RestaurantCollectionViewCell.self, forCellWithReuseIdentifier: RestaurantCollectionViewCell.reuseIdentifier)
@@ -78,7 +79,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         configureDataSource()
         
     }
-
+    
     @objc
     func toggleLayout(_ sender: UIBarButtonItem){
         // active layout change
@@ -116,7 +117,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
                 let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize,
                                                                subitem: item,
                                                                count: 2)
-                 /// create a section
+                /// create a section
                 let section = NSCollectionLayoutSection(group: group)
                 section.orthogonalScrollingBehavior = .groupPaging
                 
@@ -166,7 +167,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
                 let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize,
                                                                subitem: item,
                                                                count: 2)
-                 /// create a section
+                /// create a section
                 let section = NSCollectionLayoutSection(group: group)
                 section.orthogonalScrollingBehavior = .groupPaging
                 
@@ -216,21 +217,25 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
                 return cell
             }
         })
-        
+        createSnapshot(from: Item.myrestaurants)
+    }
+    
+    /// capture snapshot
+    private func createSnapshot(from filteredItem: [Item]) {
         /// create snapshot object
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         /// add section
         snapshot.appendSections([.categories, .restaurants])
         /// add items to the added section
         snapshot.appendItems(Item.filterItem, toSection: .categories)
-        snapshot.appendItems(Item.myrestaurants, toSection: .restaurants)
+        snapshot.appendItems(filteredItem, toSection: .restaurants)
         /// update section array
         sections = snapshot.sectionIdentifiers
         /// apply data source
-        dataSource.apply(snapshot)
-        
+        dataSource.apply(snapshot, animatingDifferences: true)
     }
     
+       
     func resetFilter() {
         var updated = dataSource.snapshot()
         updated.deleteSections([.restaurants])
@@ -239,21 +244,24 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         dataSource.apply(updated, animatingDifferences: true, completion: nil)
     }
     
-
+    
     // MARK: UICollectionViewDelegate
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if indexPath.section == 0 {
-
+            
             guard let category = Item.filterItem[indexPath.item].category?.name else {return }
             
             for index in 0...Item.myrestaurants.count - 1 {
                 /// check category
                 let item = Item.myrestaurants[index]
+                
                 guard let restrauntCategory = item.restaurant?.restaurantCategory else {return}
                 for i in 0...restrauntCategory.count - 1 {
                     if restrauntCategory[i].name == category {
                         filteredRestaurants.append(item)
+                        /// update snapshot here
+                        createSnapshot(from: filteredRestaurants)
                     }
                 }
                 /// check mealTime
@@ -261,21 +269,17 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
                 for i in 0...mealTimes.count - 1 {
                     if mealTimes[i].name == category {
                         filteredRestaurants.append(item)
+                        /// update snapshot here
+                        createSnapshot(from: filteredRestaurants)
                     }
                 }
                 
             }
-            /// update snapshot here
-            var updated = dataSource.snapshot()
-            updated.deleteSections([.restaurants])
-            updated.appendSections([.restaurants])
-            updated.appendItems(filteredRestaurants, toSection: .restaurants)
-            dataSource.apply(updated, animatingDifferences: true, completion: nil)
         }
         
     }
     
-
+    
     override func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
         
         let selectedCategory = collectionView.indexPathsForSelectedItems?.count
@@ -283,40 +287,39 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         if selectedCategory == 0 {
             resetFilter()
         } else {
-            // get category deselected
+            /// get category deselected
             if let category = Item.filterItem[indexPath.item].category?.name{
-                    for index in 0...filteredRestaurants.count - 1 {
-                        if filteredRestaurants.count == 0 {
-                            resetFilter()
-                            break
-                        } else {
-                                
-                                let restaurant = filteredRestaurants[index].restaurant
-                                
-                                /// check meal time
-                                guard let mealTime = restaurant?.mealTime else {return }
-                                for i in 0...mealTime.count - 1{
-                                    if mealTime[i].name == category {
-                                        var updated = dataSource.snapshot()
-                                        updated.deleteItems([filteredRestaurants[index]])
-                                        dataSource.apply(updated, animatingDifferences: true, completion: nil)
-                                    }
-                                }
-                                /// check category
-                                guard let categories = restaurant?.restaurantCategory else {return}
-                                for i in 0...categories.count - 1 {
-                                    if categories[i].name == category {
-                                        var updated = dataSource.snapshot()
-                                        updated.deleteItems([filteredRestaurants[index]])
-                                        dataSource.apply(updated, animatingDifferences: true, completion: nil)
-                                        print("deleted? \(filteredRestaurants)")
-                                    }
-                                }
+                for index in 0...filteredRestaurants.count - 1 {
+                    if filteredRestaurants.count == 0 {
+                        resetFilter()
+                        break
+                    } else {
+                        
+                        let restaurant = filteredRestaurants[index].restaurant
+                        
+                        /// check meal time
+                        guard let mealTime = restaurant?.mealTime else {return }
+                        for i in 0...mealTime.count - 1{
+                            if mealTime[i].name == category {
+                                var updated = dataSource.snapshot()
+                                updated.deleteItems([filteredRestaurants[index]])
+                                dataSource.apply(updated, animatingDifferences: true, completion: nil)
+                            }
                         }
-            }
+                        /// check category
+                        guard let categories = restaurant?.restaurantCategory else {return}
+                        for i in 0...categories.count - 1 {
+                            if categories[i].name == category {
+                                var updated = dataSource.snapshot()
+                                updated.deleteItems([filteredRestaurants[index]])
+                                dataSource.apply(updated, animatingDifferences: true, completion: nil)
+                            }
+                        }
                     }
                 }
             }
+        }
     }
-    
+}
+
 

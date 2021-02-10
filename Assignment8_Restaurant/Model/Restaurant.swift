@@ -8,7 +8,7 @@
 import Foundation
 
 struct Restaurant: Hashable {
-    
+    let id: Int
     let restaurantImage: String?
     let restaurantName: String
     let restaurantCategory: [FilterCategory]
