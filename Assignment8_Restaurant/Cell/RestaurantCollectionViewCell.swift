@@ -47,7 +47,7 @@ class RestaurantCollectionViewCell: UICollectionViewCell {
         contentView.addSubview(stackView)
         stackView.matchParent()
         contentView.layer.cornerRadius = 16
-        contentView.backgroundColor = .systemTeal
+        contentView.backgroundColor = .systemGray5
         imageView.anchors(topAnchor: stackView.topAnchor, leadingAnchor: stackView.leadingAnchor, trailingAnchor: stackView.trailingAnchor, bottomAnchor: hStack.topAnchor)
         imageView.heightAnchor.constraint(equalTo: stackView.heightAnchor, multiplier: 0.7).isActive = true
         nameLabel.widthAnchor.constraint(equalTo: hStack.widthAnchor, multiplier: 0.7).isActive = true

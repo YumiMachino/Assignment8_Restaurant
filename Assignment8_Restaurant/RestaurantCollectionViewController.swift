@@ -43,13 +43,8 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         } else {
             filteredRestaurants = Item.myrestaurants
         }
-        createSnapshot(from: filteredRestaurants)
         /// update snapshot here
-        //        var updated = dataSource.snapshot()
-        //        updated.deleteSections([.restaurants])
-        //        updated.appendSections([.restaurants])
-        //        updated.appendItems(filteredRestaurants, toSection: .restaurants)
-        //        dataSource.apply(updated, animatingDifferences: true, completion: nil)
+        createSnapshot(from: filteredRestaurants)
     }
     
     
@@ -67,7 +62,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
                                                                             "rectangle.grid.1x2"), style: .plain, target: self, action: #selector(toggleLayout(_:)))
         
         
-        collectionView.backgroundColor = .systemGray5
+        collectionView.backgroundColor = .white
         /// set collectionView layout
         collectionView.setCollectionViewLayout(generateGridLayout(), animated: false, completion: nil)
         
@@ -241,6 +236,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         updated.deleteSections([.restaurants])
         updated.appendSections([.restaurants])
         updated.appendItems(Item.myrestaurants, toSection: .restaurants)
+        filteredRestaurants = []
         dataSource.apply(updated, animatingDifferences: true, completion: nil)
     }
     
@@ -249,7 +245,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if indexPath.section == 0 {
-            
+           
             guard let category = Item.filterItem[indexPath.item].category?.name else {return }
             
             for index in 0...Item.myrestaurants.count - 1 {
@@ -262,23 +258,24 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
                         filteredRestaurants.append(item)
                         /// update snapshot here
                         createSnapshot(from: filteredRestaurants)
+                        break
                     }
                 }
                 /// check mealTime
-                guard let mealTimes = item.restaurant?.mealTime else {return}
-                for i in 0...mealTimes.count - 1 {
-                    if mealTimes[i].name == category {
-                        filteredRestaurants.append(item)
-                        /// update snapshot here
-                        createSnapshot(from: filteredRestaurants)
-                    }
-                }
+//                guard let mealTimes = item.restaurant?.mealTime else {return}
+//                for i in 0...mealTimes.count - 1 {
+//                    if mealTimes[i].name == category {
+//                        filteredRestaurants.append(item)
+//                        /// update snapshot here
+//                        createSnapshot(from: filteredRestaurants)
+//                        break
+//                    }
+//                }
                 
             }
         }
         
     }
-    
     
     override func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
         
@@ -298,14 +295,14 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
                         let restaurant = filteredRestaurants[index].restaurant
                         
                         /// check meal time
-                        guard let mealTime = restaurant?.mealTime else {return }
-                        for i in 0...mealTime.count - 1{
-                            if mealTime[i].name == category {
-                                var updated = dataSource.snapshot()
-                                updated.deleteItems([filteredRestaurants[index]])
-                                dataSource.apply(updated, animatingDifferences: true, completion: nil)
-                            }
-                        }
+//                        guard let mealTime = restaurant?.mealTime else {return }
+//                        for i in 0...mealTime.count - 1{
+//                            if mealTime[i].name == category {
+//                                var updated = dataSource.snapshot()
+//                                updated.deleteItems([filteredRestaurants[index]])
+//                                dataSource.apply(updated, animatingDifferences: true, completion: nil)
+//                            }
+//                        }
                         /// check category
                         guard let categories = restaurant?.restaurantCategory else {return}
                         for i in 0...categories.count - 1 {

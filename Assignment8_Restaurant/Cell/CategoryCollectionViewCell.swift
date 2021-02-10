@@ -17,7 +17,8 @@ class CategoryCollectionViewCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         contentView.addSubview(categoryLabel)
-        contentView.backgroundColor = .white
+        contentView.backgroundColor = .systemYellow
+        contentView.layer.cornerRadius = 10
         categoryLabel.matchParent()
     }
     
@@ -31,7 +32,7 @@ class CategoryCollectionViewCell: UICollectionViewCell {
     
     override var isSelected: Bool {
         didSet {
-            contentView.backgroundColor = isSelected ? .systemBlue : .white
+            contentView.backgroundColor = isSelected ? .systemTeal : .systemYellow
             categoryLabel.textColor = isSelected ? .white : .black
         }
     }
