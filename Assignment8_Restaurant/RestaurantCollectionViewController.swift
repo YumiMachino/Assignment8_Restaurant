@@ -23,7 +23,23 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         case column
     }
     
-    var activeLayout: Layout = .grid
+    var activeLayout: Layout = .grid {
+        didSet {
+            switch self.activeLayout {
+            case .grid:
+                self.layoutButton.image = UIImage(systemName: "rectangle.grid.1x2")
+            case .column:
+                self.layoutButton.image = UIImage(systemName: "square.grid.2x2")
+            }
+            collectionView.contentOffset.y = 0
+        }
+    }
+    //    var activeLayout: Layout = .grid
+    
+    lazy var layoutButton : UIBarButtonItem = {
+        let btn = UIBarButtonItem(image:  UIImage(systemName: "rectangle.grid.1x2"), style: .done, target: self, action: #selector(toggleLayout(_:)))
+        return btn
+    }()
     
     /// store filtered restaurant items
     lazy var filteredRestaurants: [Item] = []
@@ -45,6 +61,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         }
         /// update snapshot here
         createSnapshot(from: filteredRestaurants)
+        filteredRestaurants = []
     }
     
     
@@ -56,10 +73,13 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         navigationItem.searchController = searchController
         searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
+        searchController.obscuresBackgroundDuringPresentation = false
         
         self.title = "My Restaurants"
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image:  UIImage(systemName:
-                                                                            "rectangle.grid.1x2"), style: .plain, target: self, action: #selector(toggleLayout(_:)))
+        navigationController?.navigationBar.isTranslucent = false
+        navigationItem.hidesSearchBarWhenScrolling = false
+        
+        navigationItem.leftBarButtonItem = layoutButton
         
         
         collectionView.backgroundColor = .white
@@ -192,8 +212,6 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
     
     
     
-    
-    
     /// initialize the dataSource
     func configureDataSource() {
         
@@ -230,7 +248,7 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         dataSource.apply(snapshot, animatingDifferences: true)
     }
     
-       
+    
     func resetFilter() {
         var updated = dataSource.snapshot()
         updated.deleteSections([.restaurants])
@@ -245,9 +263,9 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if indexPath.section == 0 {
-           
-            guard let category = Item.filterItem[indexPath.item].category?.name else {return }
             
+            guard let category = Item.filterItem[indexPath.item].category?.name else {return }
+            /// category check
             for index in 0...Item.myrestaurants.count - 1 {
                 /// check category
                 let item = Item.myrestaurants[index]
@@ -256,23 +274,33 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
                 for i in 0...restrauntCategory.count - 1 {
                     if restrauntCategory[i].name == category {
                         filteredRestaurants.append(item)
-                        /// update snapshot here
-                        createSnapshot(from: filteredRestaurants)
+                    }
+                }
+            }
+            
+            print("filtered restaurants: \(filteredRestaurants)")
+            /// check mealTime
+            if indexPath.item == 7 || indexPath.item == 8 || indexPath.item == 9 {
+                guard let category = Item.filterItem[indexPath.item].category?.name else {return }
+                var removedCount = 0
+                let oldFilteredRestaurants = filteredRestaurants
+                for i in 0...oldFilteredRestaurants.count - 1 {
+                    print("index; \(i)")
+                    guard let mealTimes = oldFilteredRestaurants[i].restaurant?.mealTime else {return}
+                    for n in 0...mealTimes.count - 1 {
+                        if mealTimes[n].name != category {
+                            print("removed")
+                            filteredRestaurants.remove(at: i - removedCount)
+                            removedCount += 1
+                            break
+                        }
                         break
                     }
                 }
-                /// check mealTime
-//                guard let mealTimes = item.restaurant?.mealTime else {return}
-//                for i in 0...mealTimes.count - 1 {
-//                    if mealTimes[i].name == category {
-//                        filteredRestaurants.append(item)
-//                        /// update snapshot here
-//                        createSnapshot(from: filteredRestaurants)
-//                        break
-//                    }
-//                }
-                
             }
+            /// update snapshot here
+            createSnapshot(from: filteredRestaurants)
+            
         }
         
     }
@@ -286,37 +314,54 @@ class RestaurantCollectionViewController: UICollectionViewController, UISearchRe
         } else {
             /// get category deselected
             if let category = Item.filterItem[indexPath.item].category?.name{
-                for index in 0...filteredRestaurants.count - 1 {
-                    if filteredRestaurants.count == 0 {
+                
+                var removedCount = 0
+                let oldFilteredRestaurants = filteredRestaurants
+                print("oldFilterItems: \(oldFilteredRestaurants)")
+                for index in 0...oldFilteredRestaurants.count - 1 {
+                    print("index: \(index)")
+                    if filteredRestaurants.count == 0 || oldFilteredRestaurants.count == 0 {
                         resetFilter()
                         break
                     } else {
-                        
-                        let restaurant = filteredRestaurants[index].restaurant
-                        
-                        /// check meal time
-//                        guard let mealTime = restaurant?.mealTime else {return }
-//                        for i in 0...mealTime.count - 1{
-//                            if mealTime[i].name == category {
-//                                var updated = dataSource.snapshot()
-//                                updated.deleteItems([filteredRestaurants[index]])
-//                                dataSource.apply(updated, animatingDifferences: true, completion: nil)
-//                            }
-//                        }
+                        let restaurantTobeDeleted = oldFilteredRestaurants[index].restaurant
                         /// check category
-                        guard let categories = restaurant?.restaurantCategory else {return}
-                        for i in 0...categories.count - 1 {
-                            if categories[i].name == category {
-                                var updated = dataSource.snapshot()
-                                updated.deleteItems([filteredRestaurants[index]])
-                                dataSource.apply(updated, animatingDifferences: true, completion: nil)
+                        if let categories = restaurantTobeDeleted?.restaurantCategory {
+                            for i in 0...categories.count - 1 {
+                                if categories[i].name == category {
+                                    
+                                    filteredRestaurants.remove(at: index - removedCount)
+                                    removedCount += 1
+                                    createSnapshot(from: filteredRestaurants)
+                                    break
+                                    
+                                }
                             }
+                        }
+                }
+            }
+                
+                if indexPath.item == 7 || indexPath.item == 8 || indexPath.item == 9 {
+                    print("ssssss")
+                    print(collectionView.indexPathsForSelectedItems!)
+                    guard let selectedCategory = collectionView.indexPathsForSelectedItems else {return}
+                    for n in 0...Item.myrestaurants.count - 1{
+                        let restaurant = Item.myrestaurants[n]
+                        guard let categories = restaurant.restaurant?.restaurantCategory else {return}
+                        for j in 0...categories.count - 1 {
+                            for k in 0...selectedCategory.count - 1 {
+                                if categories[j].name == Item.filterItem[selectedCategory[k].row].category?.name && !filteredRestaurants.contains(Item.myrestaurants[n]) {
+                                    filteredRestaurants.append(Item.myrestaurants[n])
+                                    createSnapshot(from: filteredRestaurants)
+                                    break
+                                }
+                            }
+                           
                         }
                     }
                 }
             }
         }
+        
     }
 }
-
-

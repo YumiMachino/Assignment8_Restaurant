@@ -30,6 +30,14 @@ class RestaurantCollectionViewCell: UICollectionViewCell {
     let categoryLabel : UILabel = {
         let lb = UILabel()
         lb.translatesAutoresizingMaskIntoConstraints = false
+        lb.font = lb.font.withSize(10)
+        return lb
+    }()
+    
+    let mealTimeLabel : UILabel = {
+        let lb = UILabel()
+        lb.translatesAutoresizingMaskIntoConstraints = false
+        lb.font = lb.font.withSize(10)
         return lb
     }()
     
@@ -43,7 +51,7 @@ class RestaurantCollectionViewCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         let hStack = HorizontalStackView(arrangedSubviews: [nameLabel, costLabel], spacing: 0, alignment: .fill, distribution: .fillProportionally)
-        let stackView = VerticalStackView(arrangedSubviews: [imageView, hStack, categoryLabel], spacing: 0, alignment: .fill, distribution: .fillProportionally)
+        let stackView = VerticalStackView(arrangedSubviews: [imageView, hStack, categoryLabel,mealTimeLabel], spacing: 0, alignment: .fill, distribution: .fillProportionally)
         contentView.addSubview(stackView)
         stackView.matchParent()
         contentView.layer.cornerRadius = 16
@@ -51,7 +59,8 @@ class RestaurantCollectionViewCell: UICollectionViewCell {
         imageView.anchors(topAnchor: stackView.topAnchor, leadingAnchor: stackView.leadingAnchor, trailingAnchor: stackView.trailingAnchor, bottomAnchor: hStack.topAnchor)
         imageView.heightAnchor.constraint(equalTo: stackView.heightAnchor, multiplier: 0.7).isActive = true
         nameLabel.widthAnchor.constraint(equalTo: hStack.widthAnchor, multiplier: 0.7).isActive = true
-        hStack.heightAnchor.constraint(equalTo: stackView.heightAnchor, multiplier: 0.15).isActive = true
+        hStack.heightAnchor.constraint(equalTo: stackView.heightAnchor, multiplier: 0.10).isActive = true
+        categoryLabel.heightAnchor.constraint(equalTo: stackView.heightAnchor, multiplier: 0.10).isActive = true
         
         
     }
@@ -68,14 +77,25 @@ class RestaurantCollectionViewCell: UICollectionViewCell {
         var text = ""
         for index in 0...num - 1 {
             if index == num - 1 {
-                print(restaurant.restaurantCategory[index].name)
                 text = text + "\(restaurant.restaurantCategory[index].name)"
             } else {
-                text = text + "\(restaurant.restaurantCategory[index].name),\n"
+                text = text + "\(restaurant.restaurantCategory[index].name),"
             }
            
         }
         self.categoryLabel.text = text
+        
+        let mealTimeCount = restaurant.mealTime.count
+        var mealTimeTxt = ""
+        for index in 0...mealTimeCount - 1 {
+            if index == mealTimeCount - 1 {
+                mealTimeTxt = mealTimeTxt + "\(restaurant.mealTime[index].name)"
+            } else {
+                mealTimeTxt = mealTimeTxt + "\(restaurant.mealTime[index].name),"
+            }
+           
+        }
+        self.mealTimeLabel.text = mealTimeTxt
       
         
     }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct FilterCategory: Hashable {
+struct FilterCategory: Hashable{
     let name: String
     
 }
